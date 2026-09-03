@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const systemPrompt = `Kamu adalah Macrro AI, asisten resmi untuk Macrro Online. Jawab dalam bahasa Indonesia yang jelas, singkat, ramah, dan faktual. Macrro Online adalah platform download software, tools, macro, dan utilitas untuk Windows. Eksekusi program dilakukan secara lokal di komputer pengguna, bukan di server Macrro Online. Jangan mengklaim file aman 100%; jelaskan bahwa pengguna tetap perlu memeriksa sumber, antivirus, dan izin aplikasi. Bantu pertanyaan tentang apa itu macro, cara penggunaan, download, FAQ, keamanan file, dan navigasi situs. Jika pertanyaan di luar pengetahuan situs, katakan dengan jujur bahwa kamu tidak memiliki informasi yang cukup. Jangan memberikan instruksi untuk malware, pencurian akun, bypass keamanan, atau aktivitas berbahaya.`;
+const systemPrompt = `Kamu adalah Macrro AI, asisten resmi untuk Macrro Online. Jawab dalam bahasa Indonesia yang jelas, singkat, ramah, dan faktual. Macrro Online adalah platform download software, tools, macro, dan utilitas untuk Windows. Eksekusi program dilakukan secara lokal di komputer pengguna, bukan di server Macrro Online. Jangan mengklaim file aman 100%; jelaskan bahwa pengguna tetap perlu memeriksa sumber, antivirus, dan izin aplikasi. Bantu pertanyaan tentang apa itu macro, cara penggunaan, download, FAQ, keamanan file, status gratis/berbayar, dan navigasi situs. Jika informasi harga atau status pembayaran tidak tersedia di data yang diberikan, jangan menebak; katakan bahwa informasi tersebut belum tersedia. Jangan memberikan instruksi untuk malware, pencurian akun, bypass keamanan, atau aktivitas berbahaya.`;
 
 const fallback = (text: string) => {
   const q = text.toLowerCase();
@@ -8,7 +8,10 @@ const fallback = (text: string) => {
   if (q.includes("aman") || q.includes("keamanan")) return "Eksekusi file Macrro Online dilakukan secara lokal di komputer Windows kamu. Namun, tidak ada file yang bisa dijamin 100% aman. Periksa sumber file, gunakan antivirus, dan pastikan kamu memahami izin yang diminta program sebelum menjalankannya.";
   if (q.includes("cara") || q.includes("penggunaan")) return "Buka halaman Cara Penggunaan di Macrro Online untuk panduan. Secara umum, baca informasi file terlebih dahulu, download file yang sesuai, lalu ikuti instruksi penggunaan dan persyaratan Windows yang tercantum.";
   if (q.includes("download")) return "Kamu bisa membuka Download Center Macrro Online untuk melihat file yang tersedia beserta nama, ukuran, kategori, versi, dan deskripsinya.";
-  return "Saya siap membantu tentang Macrro Online, macro, cara penggunaan, download, dan keamanan file. Coba tanyakan sesuatu yang lebih spesifik.";
+  if (q.includes("bayar") || q.includes("berbayar") || q.includes("gratis") || q.includes("harga") || q.includes("biaya") || q.includes("free") || q.includes("paid")) return "Status gratis atau berbayar bergantung pada file yang tersedia di Macrro Online. Saya tidak akan menebak harga. Silakan cek detail file di Download Center untuk informasi harga atau status pembayaran yang tercantum.";
+  if (q.includes("windows")) return "Macrro Online ditujukan untuk pengguna Windows. Periksa persyaratan sistem pada detail file sebelum mengunduh atau menjalankannya.";
+  if (q.includes("roblox")) return "Untuk penggunaan macro pada Roblox, pastikan macro dan aplikasinya sesuai dengan ketentuan layanan game. Macrro Online hanya menyediakan informasi dan file; eksekusi dilakukan secara lokal di Windows.";
+  return "Saya siap membantu tentang Macrro Online, macro, cara penggunaan, download, harga/gratis, keamanan file, Windows, dan navigasi situs. Coba tanyakan sesuatu yang lebih spesifik.";
 };
 
 export async function POST(request: Request) {
