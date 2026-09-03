@@ -1,331 +1,282 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
-  ArrowLeft,
-  CheckCircle2,
   Download,
   Loader2,
   ShieldCheck,
   Sparkles,
-  XCircle
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
 type DownloadItem = {
   id: string;
   title: string;
-  description: string;
-  url: string;
-  fileName: string;
-  category: string;
-  status: boolean;
+  description: string | null;
+  file_url: string;
+  file_name: string | null;
+  category_id: string | null;
   downloads: number;
-  createdAt: string;
 };
 
 type State = "idle" | "processing" | "ad" | "ready" | "error";
 
-const STORAGE_KEY = "macrro_download_links";
-
 export default function DownloadPage() {
-  const [links, setLinks] = useState<DownloadItem[]>([]);
+  const [items, setItems] = useState<DownloadItem[]>([]);
   const [selected, setSelected] = useState<DownloadItem | null>(null);
   const [state, setState] = useState<State>("idle");
-  const [seconds, setSeconds] = useState(5);
-  const [error, setError] = useState("");
+  const [countdown, setCountdown] = useState(3);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const load = () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-
-      if (!saved) {
-        setLinks([]);
-        return;
-      }
-
-      try {
-        const parsed = JSON.parse(saved);
-        setLinks(parsed.filter((item: DownloadItem) => item.status));
-      } catch {
-        setLinks([]);
-      }
-    };
-
-    load();
-
-    window.addEventListener("storage", load);
-
-    return () => window.removeEventListener("storage", load);
+    loadDownloads();
   }, []);
 
-  const startDownload = (item: DownloadItem) => {
-    setError("");
+  async function loadDownloads() {
+    setLoading(true);
+    setErrorMessage("");
+
+    const { data, error } = await supabase
+      .from("downloads")
+      .select(
+        "id,title,description,file_url,file_name,category_id,downloads"
+      )
+      .eq("status", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Download query error:", error?.message ?? error);
+      setErrorMessage("Gagal mengambil daftar download dari server.");
+      setItems([]);
+    } else {
+      setItems(data ?? []);
+    }
+
+    setLoading(false);
+  }
+
+  function startDownload(item: DownloadItem) {
     setSelected(item);
     setState("processing");
+    setCountdown(3);
 
     setTimeout(() => {
       setState("ad");
+    }, 900);
+  }
 
-      let s = 5;
-      setSeconds(s);
+  useEffect(() => {
+    if (state !== "ad") return;
 
-      const timer = setInterval(() => {
-        s -= 1;
-        setSeconds(s);
+    if (countdown <= 0) {
+      setState("ready");
+      return;
+    }
 
-        if (s <= 0) {
-          clearInterval(timer);
-          setState("ready");
-        }
-      }, 1000);
+    const timer = setTimeout(() => {
+      setCountdown((value) => value - 1);
     }, 1000);
-  };
 
-  const reset = () => {
-    setSelected(null);
-    setState("idle");
-    setSeconds(5);
-    setError("");
-  };
+    return () => clearTimeout(timer);
+  }, [state, countdown]);
 
-  const completeDownload = () => {
+  async function confirmDownload() {
     if (!selected) return;
 
-    const saved = localStorage.getItem(STORAGE_KEY);
+    await supabase.rpc("increment_download", {
+      download_id: selected.id,
+    });
 
-    if (saved) {
-      try {
-        const all: DownloadItem[] = JSON.parse(saved);
+    setState("ready");
+  }
 
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(
-            all.map((item) =>
-              item.id === selected.id
-                ? { ...item, downloads: item.downloads + 1 }
-                : item
-            )
-          )
-        );
-      } catch {
-        // Ignore local demo storage errors.
-      }
-    }
-  };
+  function reset() {
+    setSelected(null);
+    setState("idle");
+    setCountdown(3);
+  }
+
+  if (selected && state !== "idle") {
+    return (
+      <main className="min-h-screen bg-[#0a0b10] text-white px-6 py-12">
+        <div className="mx-auto max-w-3xl">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-2xl backdrop-blur-xl">
+            {state === "processing" && (
+              <div className="py-16 text-center">
+                <Loader2 className="mx-auto mb-6 h-12 w-12 animate-spin text-cyan-400" />
+                <h1 className="text-2xl font-bold">Preparing Download</h1>
+                <p className="mt-2 text-white/50">
+                  Menyiapkan file untuk kamu...
+                </p>
+              </div>
+            )}
+
+            {state === "ad" && (
+              <div className="py-12 text-center">
+                <Sparkles className="mx-auto mb-5 h-10 w-10 text-cyan-400" />
+                <p className="mb-3 text-sm uppercase tracking-[0.25em] text-cyan-400">
+                  Advertisement
+                </p>
+
+                <div className="mx-auto mb-8 flex min-h-[180px] max-w-xl items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-white/30">
+                  Advertisement
+                </div>
+
+                <h1 className="text-2xl font-bold">
+                  Menyiapkan download... {countdown} detik
+                </h1>
+
+                <p className="mt-3 text-white/50">
+                  Mohon tunggu sampai proses persiapan selesai.
+                </p>
+
+                {countdown === 0 && (
+                  <button
+                    onClick={confirmDownload}
+                    className="mt-8 rounded-xl bg-cyan-400 px-6 py-3 font-bold text-black"
+                  >
+                    Lanjutkan Download
+                  </button>
+                )}
+              </div>
+            )}
+
+            {state === "ready" && (
+              <div className="py-12 text-center">
+                <CheckCircle2 className="mx-auto mb-5 h-14 w-14 text-emerald-400" />
+
+                <p className="text-sm uppercase tracking-[0.25em] text-emerald-400">
+                  Ready
+                </p>
+
+                <h1 className="mt-3 text-3xl font-bold">
+                  {selected.title}
+                </h1>
+
+                <p className="mt-3 text-white/50">
+                  {selected.file_name || "File download"}
+                </p>
+
+                <a
+                  href={selected.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    void supabase.rpc("increment_download", {
+                      download_id: selected.id,
+                    });
+                  }}
+                  className="mt-8 inline-flex items-center gap-3 rounded-xl bg-cyan-400 px-8 py-4 font-bold text-black transition hover:scale-[1.02]"
+                >
+                  <Download className="h-5 w-5" />
+                  DOWNLOAD FILE
+                </a>
+
+                <button
+                  onClick={reset}
+                  className="mt-5 block w-full text-sm text-white/40 hover:text-white"
+                >
+                  Kembali ke Download Center
+                </button>
+              </div>
+            )}
+
+            {state === "error" && (
+              <div className="py-16 text-center">
+                <XCircle className="mx-auto mb-5 h-12 w-12 text-red-400" />
+                <h1 className="text-2xl font-bold">Download gagal</h1>
+                <button
+                  onClick={reset}
+                  className="mt-6 rounded-xl bg-white px-6 py-3 font-bold text-black"
+                >
+                  Kembali
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div className="grid-bg pointer-events-none absolute inset-0" />
-
-      <div className="pointer-events-none absolute left-1/2 top-1/4 h-80 w-80 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
-
-      <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm text-white/50 transition hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Link>
-
-        <div className="font-outfit text-lg font-semibold tracking-[.2em]">
-          MACRRO<span className="text-cyan-300">.</span>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-white/35">
-          <ShieldCheck className="h-4 w-4 text-cyan-300/70" />
-          Secure session
-        </div>
-      </header>
-
-      <section className="relative mx-auto min-h-[78vh] max-w-5xl px-6 py-10">
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/5">
-            <Sparkles className="h-5 w-5 text-cyan-300" />
+    <main className="min-h-screen bg-[#0a0b10] px-6 py-12 text-white">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-12 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-4 py-2 text-sm text-cyan-300">
+            <ShieldCheck className="h-4 w-4" />
+            Secure Download Center
           </div>
 
-          <h1 className="font-outfit text-4xl font-semibold sm:text-5xl">
-            Download Center
+          <h1 className="text-4xl font-black tracking-tight">
+            Macrro Online
           </h1>
 
-          <p className="mt-3 text-sm text-white/40">
-            Pilih file yang ingin kamu download.
+          <p className="mx-auto mt-3 max-w-xl text-white/50">
+            Pilih file yang tersedia dan klik DOWNLOAD untuk memulai.
           </p>
         </div>
 
-        {state === "idle" && (
-          <>
-            {links.length === 0 ? (
-              <div className="glass rounded-3xl p-10 text-center">
-                <Download className="mx-auto h-10 w-10 text-white/20" />
+        {loading && (
+          <div className="py-20 text-center text-white/50">
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-cyan-400" />
+            Memuat file...
+          </div>
+        )}
 
-                <h2 className="mt-5 font-outfit text-2xl font-semibold">
-                  Belum ada file
-                </h2>
+        {!loading && errorMessage && (
+          <div className="rounded-2xl border border-red-400/20 bg-red-400/5 p-6 text-center text-red-300">
+            {errorMessage}
+          </div>
+        )}
 
-                <p className="mt-2 text-sm text-white/35">
-                  Admin belum menambahkan download yang aktif.
+        {!loading && !errorMessage && items.length === 0 && (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center">
+            <Download className="mx-auto mb-5 h-10 w-10 text-white/30" />
+            <h2 className="text-xl font-bold">Belum ada file</h2>
+            <p className="mt-2 text-white/40">
+              Admin belum menambahkan file download aktif.
+            </p>
+          </div>
+        )}
+
+        {!loading && items.length > 0 && (
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((item) => (
+              <article
+                key={item.id}
+                className="group rounded-2xl border border-white/10 bg-white/[0.035] p-6 transition hover:-translate-y-1 hover:border-cyan-400/30"
+              >
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
+                  <Download className="h-6 w-6" />
+                </div>
+
+                <h2 className="text-xl font-bold">{item.title}</h2>
+
+                <p className="mt-3 min-h-12 text-sm leading-6 text-white/45">
+                  {item.description || "File tersedia untuk didownload."}
                 </p>
-              </div>
-            ) : (
-              <div className="grid gap-5 md:grid-cols-2">
-                {links.map((item) => (
-                  <div
-                    key={item.id}
-                    className="glass glass-hover rounded-3xl p-6"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/5">
-                        <Download className="h-5 w-5 text-cyan-300" />
-                      </div>
 
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-wider text-white/35">
-                        {item.category}
-                      </span>
-                    </div>
-
-                    <h2 className="mt-6 font-outfit text-xl font-semibold text-white/90">
-                      {item.title}
-                    </h2>
-
-                    <p className="mt-2 min-h-10 text-sm leading-6 text-white/35">
-                      {item.description || "Download file dari Macrro Online."}
-                    </p>
-
-                    <div className="mt-5 rounded-xl border border-white/5 bg-black/20 px-3 py-2 text-xs text-white/30">
-                      {item.fileName}
-                    </div>
-
-                    <button
-                      onClick={() => startDownload(item)}
-                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-300 py-3.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-200"
-                    >
-                      <Download className="h-4 w-4" />
-                      DOWNLOAD
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {state === "processing" && (
-          <StatusCard
-            icon={
-              <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
-            }
-            title="Preparing download..."
-            text="Menyiapkan secure download session."
-          />
-        )}
-
-        {state === "ad" && selected && (
-          <div className="glass rounded-3xl p-8 text-center">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/5">
-              <span className="font-outfit text-4xl font-semibold text-cyan-200">
-                {seconds}
-              </span>
-            </div>
-
-            <div className="mt-7 text-sm font-semibold">
-              Preparing your download
-            </div>
-
-            <p className="mt-2 text-xs text-white/35">
-              Advertisement placement • countdown
-            </p>
-
-            <div className="mx-auto mt-7 flex h-24 max-w-xl items-center justify-center rounded-2xl border border-white/5 bg-black/20 text-[10px] tracking-[.3em] text-white/20">
-              ADVERTISEMENT
-            </div>
-
-            <p className="mt-5 text-xs text-white/25">
-              {selected.fileName}
-            </p>
+                <button
+                  onClick={() => startDownload(item)}
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 font-bold text-black transition group-hover:shadow-[0_0_30px_rgba(0,240,255,0.15)]"
+                >
+                  <Download className="h-4 w-4" />
+                  DOWNLOAD
+                </button>
+              </article>
+            ))}
           </div>
         )}
-
-        {state === "ready" && selected && (
-          <div className="glass rounded-3xl p-8 text-center">
-            <CheckCircle2 className="mx-auto h-12 w-12 text-cyan-300" />
-
-            <h2 className="mt-5 font-outfit text-2xl font-semibold">
-              Your file is ready
-            </h2>
-
-            <p className="mt-2 text-sm text-white/35">
-              {selected.title}
-            </p>
-
-            <p className="mt-1 text-xs text-white/25">
-              {selected.fileName}
-            </p>
-
-            <a
-              href={selected.url}
-              target="_blank"
-              rel="noreferrer"
-              onClick={completeDownload}
-              className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-300 py-4 text-sm font-bold text-slate-950 transition hover:bg-cyan-200"
-            >
-              <Download className="h-4 w-4" />
-              DOWNLOAD FILE
-            </a>
-
-            <button
-              onClick={reset}
-              className="mt-3 text-xs text-white/35 hover:text-white"
-            >
-              Kembali ke Download Center
-            </button>
-          </div>
-        )}
-
-        {state === "error" && (
-          <div className="glass rounded-3xl p-8 text-center">
-            <XCircle className="mx-auto h-12 w-12 text-red-300" />
-
-            <h2 className="mt-5 font-outfit text-2xl font-semibold">
-              Download gagal
-            </h2>
-
-            <p className="mt-2 text-sm text-white/40">{error}</p>
-
-            <button
-              onClick={reset}
-              className="mt-7 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm"
-            >
-              Kembali
-            </button>
-          </div>
-        )}
-      </section>
+      </div>
     </main>
   );
 }
 
-function StatusCard({
-  icon,
-  title,
-  text
-}: {
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="glass rounded-3xl p-10 text-center">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/5">
-        {icon}
-      </div>
 
-      <h2 className="mt-6 font-outfit text-2xl font-semibold">
-        {title}
-      </h2>
 
-      <p className="mt-2 text-sm text-white/40">{text}</p>
-    </div>
-  );
-}
+
+
