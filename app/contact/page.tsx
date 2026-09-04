@@ -1,3 +1,20 @@
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact Macrro Online",
+  description: "Hubungi Macrro Online untuk pertanyaan, bantuan, laporan masalah, atau informasi terkait macro dan tools Windows.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/contact",
+  },
+  openGraph: {
+    title: "Contact Macrro Online",
+    description: "Hubungi Macrro Online untuk pertanyaan, bantuan, laporan masalah, atau informasi terkait macro dan tools Windows.",
+    url: "https://macro-roblx-pb.vercel.app/contact",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
 import Link from "next/link";
 
 export default function ContactPage() {
@@ -76,8 +93,9 @@ export default function ContactPage() {
       </section>
 
       <footer className="border-t border-white/10 px-6 py-8 text-center text-sm text-white/40">
-        © {new Date().getFullYear()} Macrro Online. All rights reserved.
+        Â© {new Date().getFullYear()} Macrro Online. All rights reserved.
       </footer>
     </main>
   );
 }
+

@@ -1,4 +1,21 @@
-﻿import Link from "next/link";
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "FAQ Macrro Online",
+  description: "Temukan jawaban atas pertanyaan umum tentang Macrro Online, download macro, penggunaan tools, keamanan file, dan eksekusi lokal di Windows.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/faq",
+  },
+  openGraph: {
+    title: "FAQ Macrro Online",
+    description: "Temukan jawaban atas pertanyaan umum tentang Macrro Online, download macro, penggunaan tools, keamanan file, dan eksekusi lokal di Windows.",
+    url: "https://macro-roblx-pb.vercel.app/faq",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
+import Link from "next/link";
 
 const faq = [
   ["Apa itu Macrro Online?", "Macrro Online adalah platform Download Center untuk menyediakan file software, tools, macro, dan utilitas."],
@@ -29,3 +46,4 @@ export default function FAQPage() {
     </main>
   );
 }
+

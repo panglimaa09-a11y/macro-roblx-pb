@@ -1,4 +1,21 @@
-﻿import Link from "next/link";
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Macro Windows & Tools",
+  description: "Informasi tentang macro Windows dan tools Macrro Online, termasuk fungsi, penggunaan, kompatibilitas, serta eksekusi aplikasi secara lokal.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/macro",
+  },
+  openGraph: {
+    title: "Macro Windows & Tools",
+    description: "Informasi tentang macro Windows dan tools Macrro Online, termasuk fungsi, penggunaan, kompatibilitas, serta eksekusi aplikasi secara lokal.",
+    url: "https://macro-roblx-pb.vercel.app/macro",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
+import Link from "next/link";
 
 export default function MacroPage() {
   return (
@@ -41,3 +58,4 @@ export default function MacroPage() {
     </main>
   );
 }
+

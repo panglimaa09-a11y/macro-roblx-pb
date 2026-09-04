@@ -1,4 +1,21 @@
-﻿import Link from "next/link";
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Terms of Service Macrro Online yang menjelaskan ketentuan penggunaan website, download file, tools, dan layanan yang tersedia.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/terms",
+  },
+  openGraph: {
+    title: "Terms of Service",
+    description: "Terms of Service Macrro Online yang menjelaskan ketentuan penggunaan website, download file, tools, dan layanan yang tersedia.",
+    url: "https://macro-roblx-pb.vercel.app/terms",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
+import Link from "next/link";
 
 export default function TermsPage() {
   return (
@@ -30,3 +47,4 @@ export default function TermsPage() {
     </main>
   );
 }
+

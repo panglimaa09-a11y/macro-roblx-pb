@@ -1,4 +1,21 @@
-﻿import Link from "next/link";
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Privacy Policy Macrro Online yang menjelaskan informasi yang dikumpulkan, penggunaan data, keamanan, dan privasi pengguna.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy",
+    description: "Privacy Policy Macrro Online yang menjelaskan informasi yang dikumpulkan, penggunaan data, keamanan, dan privasi pengguna.",
+    url: "https://macro-roblx-pb.vercel.app/privacy",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
+import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
@@ -42,3 +59,4 @@ export default function PrivacyPage() {
     </main>
   );
 }
+

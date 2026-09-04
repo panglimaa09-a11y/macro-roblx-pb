@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "software Windows",
     "Macrro Online",
   ],
-  alternates: { canonical: "/" },
+  alternates: { canonical: siteUrl },
   robots: {
     index: true,
     follow: true,
@@ -55,3 +55,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+

@@ -1,4 +1,21 @@
-﻿import Link from "next/link";
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Disclaimer",
+  description: "Disclaimer Macrro Online mengenai penggunaan macro, tools, file download, dan aplikasi yang dijalankan secara lokal di Windows.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/disclaimer",
+  },
+  openGraph: {
+    title: "Disclaimer",
+    description: "Disclaimer Macrro Online mengenai penggunaan macro, tools, file download, dan aplikasi yang dijalankan secara lokal di Windows.",
+    url: "https://macro-roblx-pb.vercel.app/disclaimer",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
+import Link from "next/link";
 
 export default function DisclaimerPage() {
   return (
@@ -37,3 +54,4 @@ export default function DisclaimerPage() {
     </main>
   );
 }
+

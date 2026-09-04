@@ -1,4 +1,21 @@
-﻿import Link from "next/link";
+﻿import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cara Menggunakan Macro Windows",
+  description: "Panduan cara menggunakan macro dan tools Macrro Online di Windows, mulai dari download file hingga menjalankan aplikasi secara lokal.",
+  alternates: {
+    canonical: "https://macro-roblx-pb.vercel.app/cara-penggunaan",
+  },
+  openGraph: {
+    title: "Cara Menggunakan Macro Windows",
+    description: "Panduan cara menggunakan macro dan tools Macrro Online di Windows, mulai dari download file hingga menjalankan aplikasi secara lokal.",
+    url: "https://macro-roblx-pb.vercel.app/cara-penggunaan",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Macrro Online",
+  },
+};
+import Link from "next/link";
 
 export default function CaraPenggunaanPage() {
   return (
@@ -35,3 +52,4 @@ export default function CaraPenggunaanPage() {
     </main>
   );
 }
+
