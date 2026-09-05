@@ -1,6 +1,9 @@
 ﻿import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -122,7 +125,9 @@ export async function GET() {
     { settings },
     {
       headers: {
-        "Cache-Control": "no-store",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     }
   );
@@ -218,9 +223,7 @@ export async function POST(request: Request) {
           Number(settings.countdown),
 
         require_active_file:
-          download.require_active_file === undefined
-            ? true
-            : download.require_active_file,
+          download.require_active_file ?? true,
       },
     },
 
@@ -238,13 +241,11 @@ export async function POST(request: Request) {
 
   const { error: upsertError } = await supabase
     .from("site_settings")
-    .upsert(updates, {
-      onConflict: "setting_key",
-    });
+    .upsert(updates, { onConflict: "setting_key" });
 
   if (upsertError) {
     console.error(
-      "POST /api/admin/settings write:",
+      "POST /api/admin/settings upsert:",
       upsertError
     );
 
@@ -257,8 +258,14 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({
-    ok: true,
-    settings,
-  });
+  return NextResponse.json(
+    { settings },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
