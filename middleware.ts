@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
+function noStore(response: NextResponse) {
+  response.headers.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -14,7 +24,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/sitemap.xml" ||
     pathname === "/ads.txt"
   ) {
-    return NextResponse.next();
+    return noStore(NextResponse.next());
   }
 
   try {
@@ -24,12 +34,12 @@ export async function middleware(request: NextRequest) {
     const response = await fetch(settingsUrl, {
       cache: "no-store",
       headers: {
-        "Cache-Control": "no-cache",
+        "Cache-Control": "no-cache, no-store, max-age=0",
       },
     });
 
     if (!response.ok) {
-      return NextResponse.next();
+      return noStore(NextResponse.next());
     }
 
     const data = await response.json();
@@ -37,14 +47,14 @@ export async function middleware(request: NextRequest) {
     if (data?.settings?.maintenance === true) {
       const maintenanceUrl = new URL("/maintenance", request.url);
 
-      return NextResponse.redirect(maintenanceUrl);
+      return noStore(NextResponse.redirect(maintenanceUrl, 307));
     }
   } catch {
     // Jika pengecekan gagal, jangan mematikan website.
-    return NextResponse.next();
+    return noStore(NextResponse.next());
   }
 
-  return NextResponse.next();
+  return noStore(NextResponse.next());
 }
 
 export const config = {
